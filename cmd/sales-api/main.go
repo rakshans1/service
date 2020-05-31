@@ -12,13 +12,23 @@ import (
 
 	"github.com/ardanlabs/conf"
 	_ "github.com/lib/pq"
+	"github.com/pkg/errors"
 	"github.com/rakshans1/service/cmd/sales-api/internal/handlers"
 	"github.com/rakshans1/service/internal/platform/database"
 )
 
 func main() {
+	if err := run(); err != nil {
+		log.Println("shutting down", "error:", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+
 	// =========================================================================
 	// Configuration
+
 	var cfg struct {
 		Web struct {
 			Address         string        `conf:"default:localhost:8080"`
@@ -39,26 +49,29 @@ func main() {
 		if err == conf.ErrHelpWanted {
 			usage, err := conf.Usage("SALES", &cfg)
 			if err != nil {
-				log.Fatalf("error : generating config usage : %v", err)
+				return errors.Wrap(err, "generating config usage")
 			}
 			fmt.Println(usage)
-			return
+			return nil
 		}
-		log.Fatalf("error: parsing config: %s", err)
+		return errors.Wrap(err, "parsing config")
 	}
+
 	// =========================================================================
-	// App starting
-	log.Printf("main: started")
-	defer log.Println("main: Completed")
+	// App Starting
+
+	log.Printf("main : Started")
+	defer log.Println("main : Completed")
 
 	out, err := conf.String(&cfg)
 	if err != nil {
-		log.Fatalf("error : generating config for output : %v", err)
+		return errors.Wrap(err, "generating config for output")
 	}
 	log.Printf("main : Config :\n%v\n", out)
 
 	// =========================================================================
 	// Start Database
+
 	db, err := database.Open(database.Config{
 		User:       cfg.DB.User,
 		Password:   cfg.DB.Password,
@@ -67,14 +80,15 @@ func main() {
 		DisableTLS: cfg.DB.DisableTLS,
 	})
 	if err != nil {
-		log.Fatalf("error: connecting to db: %s", err)
+		return errors.Wrap(err, "connecting to db")
 	}
 	defer db.Close()
 
 	productsHandler := handlers.Products{DB: db}
 
 	// =========================================================================
-	// Start API serving
+	// Start API Service
+
 	api := http.Server{
 		Addr:         cfg.Web.Address,
 		Handler:      http.HandlerFunc(productsHandler.List),
@@ -88,7 +102,7 @@ func main() {
 
 	// Start the service listening for requests.
 	go func() {
-		log.Printf("main: API listening on %s", api.Addr)
+		log.Printf("main : API listening on %s", api.Addr)
 		serverErrors <- api.ListenAndServe()
 	}()
 
@@ -103,26 +117,26 @@ func main() {
 	// Blocking main and waiting for shutdown.
 	select {
 	case err := <-serverErrors:
-		log.Fatalf("error: listening and serving %s", err)
+		return errors.Wrap(err, "starting server")
 
 	case <-shutdown:
-		log.Println("main: Start shutdown")
+		log.Println("main : Start shutdown")
 
-		// Give outstanding request a deadline for completion.
+		// Give outstanding requests a deadline for completion.
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
 		defer cancel()
 
 		// Asking listener to shutdown and load shed.
-
 		err := api.Shutdown(ctx)
 		if err != nil {
-			log.Printf("main: Graceful shutdown did not complete in %v : %v", cfg.Web.ShutdownTimeout, err)
+			log.Printf("main : Graceful shutdown did not complete in %v : %v", cfg.Web.ShutdownTimeout, err)
 			err = api.Close()
 		}
 
 		if err != nil {
-			log.Fatalf("main: could not stop server gracefully: %v", err)
+			return errors.Wrap(err, "could not stop server gracefully")
 		}
 	}
 
+	return nil
 }
