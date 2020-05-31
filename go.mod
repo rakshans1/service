@@ -8,6 +8,7 @@ require (
 	github.com/ardanlabs/conf v1.3.2
 	github.com/cznic/ql v1.2.0 // indirect
 	github.com/go-chi/chi v4.1.1+incompatible
+	github.com/google/go-cmp v0.3.1
 	github.com/google/uuid v1.1.1
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.6.0

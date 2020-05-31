@@ -4,6 +4,7 @@ import (
 	"net/url"
 
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq" // The database driver in use.
 )
 
 // Config is the required properties to use the database.

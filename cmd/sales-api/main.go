@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf"
-	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
 	"github.com/rakshans1/service/cmd/sales-api/internal/handlers"
 	"github.com/rakshans1/service/internal/platform/database"
