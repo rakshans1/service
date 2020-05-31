@@ -1,0 +1,18 @@
+version: '3'
+
+networks:
+  postgres:
+    driver: bridge
+
+services:
+
+  # This starts a local PostgreSQL DB.
+  db:
+    container_name: sales_db
+    networks:
+      - postgres
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: postgres
