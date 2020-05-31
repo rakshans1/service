@@ -31,12 +31,13 @@ func (a *App) Handle(method, url string, h Handler) {
 		err := h(w, r)
 
 		if err != nil {
+			// Log the error.
+			a.log.Printf("ERROR : %+v", err)
 
-			// Tell the client about the error.
-			res := ErrorResponse{
-				Error: err.Error(),
+			// Respond to the error.
+			if err := RespondError(w, err); err != nil {
+				a.log.Printf("ERROR : %v", err)
 			}
-			Respond(w, res, http.StatusInternalServerError)
 		}
 	}
 	a.mux.MethodFunc(method, url, fn)

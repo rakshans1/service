@@ -52,7 +52,16 @@ func (p *Products) Retrive(w http.ResponseWriter, r *http.Request) error {
 
 	prod, err := product.Retrieve(p.db, id)
 	if err != nil {
-		return errors.Wrapf(err, "getting product %q", id)
+		switch err {
+		case product.ErrNotFound:
+			return web.NewRequestError(err, http.StatusNotFound)
+
+		case product.ErrInvalidID:
+			return web.NewRequestError(err, http.StatusBadRequest)
+
+		default:
+			return errors.Wrapf(err, "getting product %q", id)
+		}
 	}
 
 	return web.Respond(w, prod, http.StatusOK)
