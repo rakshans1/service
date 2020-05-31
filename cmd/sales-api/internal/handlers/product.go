@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/jmoiron/sqlx"
+	"github.com/rakshans1/service/internal/platform/web"
 	"github.com/rakshans1/service/internal/product"
 )
 
@@ -22,22 +23,38 @@ type Products struct {
 func (p *Products) List(w http.ResponseWriter, r *http.Request) {
 	list, err := product.List(p.db)
 	if err != nil {
-		p.log.Printf("error: listing products: %s", err)
+		p.log.Println("listing products", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	data, err := json.Marshal(list)
+	if err := web.Respond(w, list, http.StatusOK); err != nil {
+		p.log.Println("encoding response", "error", err)
+		return
+	}
+}
+
+// Create decode the body of a request to create a new product. The full
+// product with generated fields is sent back in the response
+func (p *Products) Create(w http.ResponseWriter, r *http.Request) {
+	var np product.NewProduct
+	if err := web.Decode(r, &np); err != nil {
+		p.log.Println("decoding product", "error", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	prod, err := product.Create(p.db, np, time.Now())
 	if err != nil {
-		p.log.Println("error marshalling result", err)
+		p.log.Println("creating product", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write(data); err != nil {
-		p.log.Println("error writing result", err)
+	if err := web.Respond(w, &prod, http.StatusCreated); err != nil {
+		p.log.Println("encoding response", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -52,16 +69,10 @@ func (p *Products) Retrive(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-	data, err := json.Marshal(prod)
-	if err != nil {
-		p.log.Println("error marshalling result", err)
+
+	if err := web.Respond(w, prod, http.StatusOK); err != nil {
+		p.log.Println("encoding response", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
-	}
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-
-	if _, err := w.Write(data); err != nil {
-		p.log.Println("error writing result", err)
 	}
 }
