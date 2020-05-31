@@ -27,6 +27,10 @@ func main() {
 func run() error {
 
 	// =========================================================================
+	// Logging
+	log := log.New(os.Stdout, "SALES :", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+
+	// =========================================================================
 	// Configuration
 
 	var cfg struct {
@@ -84,7 +88,7 @@ func run() error {
 	}
 	defer db.Close()
 
-	productsHandler := handlers.Products{DB: db}
+	productsHandler := handlers.Products{DB: db, Log: log}
 
 	// =========================================================================
 	// Start API Service
