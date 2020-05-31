@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 	"github.com/rakshans1/service/internal/platform/web"
 	"github.com/rakshans1/service/internal/product"
 )
@@ -20,59 +21,39 @@ type Products struct {
 
 // List gets all products from the service layer and encodes them for the
 // client response.
-func (p *Products) List(w http.ResponseWriter, r *http.Request) {
+func (p *Products) List(w http.ResponseWriter, r *http.Request) error {
 	list, err := product.List(p.db)
 	if err != nil {
-		p.log.Println("listing products", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return errors.Wrap(err, "getting product list")
 	}
 
-	if err := web.Respond(w, list, http.StatusOK); err != nil {
-		p.log.Println("encoding response", "error", err)
-		return
-	}
+	return web.Respond(w, list, http.StatusOK)
 }
 
 // Create decode the body of a request to create a new product. The full
 // product with generated fields is sent back in the response
-func (p *Products) Create(w http.ResponseWriter, r *http.Request) {
+func (p *Products) Create(w http.ResponseWriter, r *http.Request) error {
 	var np product.NewProduct
 	if err := web.Decode(r, &np); err != nil {
-		p.log.Println("decoding product", "error", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		return errors.Wrap(err, "decoding new product")
 	}
 
 	prod, err := product.Create(p.db, np, time.Now())
 	if err != nil {
-		p.log.Println("creating product", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return errors.Wrap(err, "creating new product")
 	}
 
-	if err := web.Respond(w, &prod, http.StatusCreated); err != nil {
-		p.log.Println("encoding response", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	return web.Respond(w, &prod, http.StatusCreated)
 }
 
 // Retrive finds a single product identified by an ID in the request URL.
-func (p *Products) Retrive(w http.ResponseWriter, r *http.Request) {
+func (p *Products) Retrive(w http.ResponseWriter, r *http.Request) error {
 	id := chi.URLParam(r, "id")
 
 	prod, err := product.Retrieve(p.db, id)
 	if err != nil {
-		p.log.Println("getting product", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-
+		return errors.Wrapf(err, "getting product %q", id)
 	}
 
-	if err := web.Respond(w, prod, http.StatusOK); err != nil {
-		p.log.Println("encoding response", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	return web.Respond(w, prod, http.StatusOK)
 }
