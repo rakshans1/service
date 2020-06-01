@@ -35,6 +35,7 @@ func TestProducts(t *testing.T) {
 	tests := ProductTests{app: handlers.API(db, log)}
 
 	t.Run("List", tests.List)
+	t.Run("CreateRequiresFields", tests.CreateRequiresFields)
 	t.Run("ProductCRUD", tests.ProductCRUD)
 }
 
@@ -66,6 +67,8 @@ func (p *ProductTests) List(t *testing.T) {
 			"name":         "Comic Books",
 			"cost":         float64(50),
 			"quantity":     float64(42),
+			"revenue":      float64(350),
+			"sold":         float64(7),
 			"date_created": "2019-01-01T00:00:01.000001Z",
 			"date_updated": "2019-01-01T00:00:01.000001Z",
 		},
@@ -74,6 +77,8 @@ func (p *ProductTests) List(t *testing.T) {
 			"name":         "McDonalds Toys",
 			"cost":         float64(75),
 			"quantity":     float64(120),
+			"revenue":      float64(225),
+			"sold":         float64(3),
 			"date_created": "2019-01-01T00:00:02.000001Z",
 			"date_updated": "2019-01-01T00:00:02.000001Z",
 		},
@@ -81,6 +86,20 @@ func (p *ProductTests) List(t *testing.T) {
 
 	if diff := cmp.Diff(want, list); diff != "" {
 		t.Fatalf("Response did not match expected. Diff:\n%s", diff)
+	}
+}
+
+func (p *ProductTests) CreateRequiresFields(t *testing.T) {
+	body := strings.NewReader(`{}`)
+	req := httptest.NewRequest("POST", "/v1/products", body)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp := httptest.NewRecorder()
+
+	p.app.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("getting: expected status code %v, got %v", http.StatusBadRequest, resp.Code)
 	}
 }
 
@@ -121,6 +140,8 @@ func (p *ProductTests) ProductCRUD(t *testing.T) {
 			"name":         "product0",
 			"cost":         float64(55),
 			"quantity":     float64(6),
+			"sold":         float64(0),
+			"revenue":      float64(0),
 		}
 
 		if diff := cmp.Diff(want, created); diff != "" {
@@ -148,6 +169,75 @@ func (p *ProductTests) ProductCRUD(t *testing.T) {
 		// Fetched product should match the one we created.
 		if diff := cmp.Diff(created, fetched); diff != "" {
 			t.Fatalf("Retrieved product should match created. Diff:\n%s", diff)
+		}
+	}
+
+	{ // UPDATE
+		body := strings.NewReader(`{"name":"new name","cost":20,"quantity":10}`)
+		url := fmt.Sprintf("/v1/products/%s", created["id"])
+		req := httptest.NewRequest("PUT", url, body)
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+
+		p.app.ServeHTTP(resp, req)
+
+		if http.StatusNoContent != resp.Code {
+			t.Fatalf("updating: expected status code %v, got %v", http.StatusNoContent, resp.Code)
+		}
+
+		// Retrieve updated record to be sure it worked.
+		req = httptest.NewRequest("GET", url, nil)
+		req.Header.Set("Content-Type", "application/json")
+		resp = httptest.NewRecorder()
+
+		p.app.ServeHTTP(resp, req)
+
+		if http.StatusOK != resp.Code {
+			t.Fatalf("retrieving: expected status code %v, got %v", http.StatusOK, resp.Code)
+		}
+
+		var updated map[string]interface{}
+		if err := json.NewDecoder(resp.Body).Decode(&updated); err != nil {
+			t.Fatalf("decoding: %s", err)
+		}
+
+		want := map[string]interface{}{
+			"id":           created["id"],
+			"date_created": created["date_created"],
+			"date_updated": updated["date_updated"],
+			"name":         "new name",
+			"cost":         float64(20),
+			"quantity":     float64(10),
+			"sold":         float64(0),
+			"revenue":      float64(0),
+		}
+
+		// Updated product should match the one we created.
+		if diff := cmp.Diff(want, updated); diff != "" {
+			t.Fatalf("Retrieved product should match created. Diff:\n%s", diff)
+		}
+	}
+
+	{ // DELETE
+		url := fmt.Sprintf("/v1/products/%s", created["id"])
+		req := httptest.NewRequest("DELETE", url, nil)
+		resp := httptest.NewRecorder()
+
+		p.app.ServeHTTP(resp, req)
+
+		if http.StatusNoContent != resp.Code {
+			t.Fatalf("updating: expected status code %v, got %v", http.StatusNoContent, resp.Code)
+		}
+
+		// Retrieve updated record to be sure it worked.
+		req = httptest.NewRequest("GET", url, nil)
+		req.Header.Set("Content-Type", "application/json")
+		resp = httptest.NewRecorder()
+
+		p.app.ServeHTTP(resp, req)
+
+		if http.StatusNotFound != resp.Code {
+			t.Fatalf("retrieving: expected status code %v, got %v", http.StatusNotFound, resp.Code)
 		}
 	}
 }

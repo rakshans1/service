@@ -89,3 +89,55 @@ func Retrieve(ctx context.Context, db *sqlx.DB, id string) (*Product, error) {
 
 	return &p, nil
 }
+
+// Update modifies data about a Product. It will error if the specified ID is
+// invalid or does not reference an existing Product.
+func Update(ctx context.Context, db *sqlx.DB, id string, update UpdateProduct, now time.Time) error {
+
+	p, err := Retrieve(ctx, db, id)
+	if err != nil {
+		return err
+	}
+
+	if update.Name != nil {
+		p.Name = *update.Name
+	}
+	if update.Cost != nil {
+		p.Cost = *update.Cost
+	}
+	if update.Quantity != nil {
+		p.Quantity = *update.Quantity
+	}
+	p.DateUpdated = now
+
+	const q = `UPDATE products SET
+		"name" = $2,
+		"cost" = $3,
+		"quantity" = $4,
+		"date_updated" = $5
+		WHERE product_id = $1`
+	_, err = db.ExecContext(ctx, q, id,
+		p.Name, p.Cost,
+		p.Quantity, p.DateUpdated,
+	)
+	if err != nil {
+		return errors.Wrap(err, "updating product")
+	}
+
+	return nil
+}
+
+// Delete removes the product identified by a given ID.
+func Delete(ctx context.Context, db *sqlx.DB, id string) error {
+	if _, err := uuid.Parse(id); err != nil {
+		return ErrInvalidID
+	}
+
+	const q = `DELETE FROM products WHERE product_id = $1`
+
+	if _, err := db.ExecContext(ctx, q, id); err != nil {
+		return errors.Wrapf(err, "deleting product %s", id)
+	}
+
+	return nil
+}

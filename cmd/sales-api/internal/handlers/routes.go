@@ -12,13 +12,24 @@ import (
 func API(db *sqlx.DB, log *log.Logger) http.Handler {
 	app := web.NewApp(log)
 
-	p := Products{db: db, log: log}
-	app.Handle(http.MethodGet, "/v1/products", p.List)
-	app.Handle(http.MethodGet, "/v1/products/{id}", p.Retrive)
-	app.Handle(http.MethodPost, "/v1/products", p.Create)
+	{
+		c := Check{db: db}
+		app.Handle(http.MethodGet, "/v1/health", c.Health)
+	}
 
-	app.Handle(http.MethodPost, "/v1/products/{id}/sales", p.AddSale)
-	app.Handle(http.MethodGet, "/v1/products/{id}/sales", p.ListSales)
+	{
+
+		p := Products{db: db, log: log}
+		app.Handle(http.MethodGet, "/v1/products", p.List)
+		app.Handle(http.MethodGet, "/v1/products/{id}", p.Retrive)
+		app.Handle(http.MethodPost, "/v1/products", p.Create)
+		app.Handle(http.MethodPut, "/v1/products/{id}", p.Update)
+		app.Handle(http.MethodDelete, "/v1/products/{id}", p.Delete)
+
+		app.Handle(http.MethodPost, "/v1/products/{id}/sales", p.AddSale)
+		app.Handle(http.MethodGet, "/v1/products/{id}/sales", p.ListSales)
+
+	}
 
 	return app
 }
