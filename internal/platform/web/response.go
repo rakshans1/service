@@ -27,12 +27,13 @@ func Respond(w http.ResponseWriter, data interface{}, statusCode int) error {
 
 // RespondError sends an error response back to the client.
 func RespondError(w http.ResponseWriter, err error) error {
+
 	// If the error was of the type *Error, the handler has
 	// a specific status code and error to return.
-
 	if webErr, ok := errors.Cause(err).(*Error); ok {
 		er := ErrorResponse{
-			Error: webErr.Err.Error(),
+			Error:  webErr.Err.Error(),
+			Fields: webErr.Fields,
 		}
 
 		if err := Respond(w, er, webErr.Status); err != nil {

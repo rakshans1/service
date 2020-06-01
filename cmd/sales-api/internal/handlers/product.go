@@ -22,7 +22,7 @@ type Products struct {
 // List gets all products from the service layer and encodes them for the
 // client response.
 func (p *Products) List(w http.ResponseWriter, r *http.Request) error {
-	list, err := product.List(p.db)
+	list, err := product.List(r.Context(), p.db)
 	if err != nil {
 		return errors.Wrap(err, "getting product list")
 	}
@@ -38,7 +38,7 @@ func (p *Products) Create(w http.ResponseWriter, r *http.Request) error {
 		return errors.Wrap(err, "decoding new product")
 	}
 
-	prod, err := product.Create(p.db, np, time.Now())
+	prod, err := product.Create(r.Context(), p.db, np, time.Now())
 	if err != nil {
 		return errors.Wrap(err, "creating new product")
 	}
@@ -50,7 +50,7 @@ func (p *Products) Create(w http.ResponseWriter, r *http.Request) error {
 func (p *Products) Retrive(w http.ResponseWriter, r *http.Request) error {
 	id := chi.URLParam(r, "id")
 
-	prod, err := product.Retrieve(p.db, id)
+	prod, err := product.Retrieve(r.Context(), p.db, id)
 	if err != nil {
 		switch err {
 		case product.ErrNotFound:
@@ -65,4 +65,34 @@ func (p *Products) Retrive(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return web.Respond(w, prod, http.StatusOK)
+}
+
+// AddSale creates a new Sale for a particular product. It looks for a JSON
+// object in the request body. The full model is returned to the caller.
+func (p *Products) AddSale(w http.ResponseWriter, r *http.Request) error {
+	var ns product.NewSale
+	if err := web.Decode(r, &ns); err != nil {
+		return errors.Wrap(err, "decoding new sale")
+	}
+
+	productID := chi.URLParam(r, "id")
+
+	sale, err := product.AddSale(r.Context(), p.db, ns, productID, time.Now())
+	if err != nil {
+		return errors.Wrap(err, "adding new sale")
+	}
+
+	return web.Respond(w, sale, http.StatusCreated)
+}
+
+// ListSales gets all sales for a particular product.
+func (p *Products) ListSales(w http.ResponseWriter, r *http.Request) error {
+	id := chi.URLParam(r, "id")
+
+	list, err := product.ListSales(r.Context(), p.db, id)
+	if err != nil {
+		return errors.Wrap(err, "getting sales list")
+	}
+
+	return web.Respond(w, list, http.StatusOK)
 }
