@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "expvar" // Register the expvar handlers
 	"fmt"
 	"log"
 	"net/http"
@@ -93,6 +94,7 @@ func run() error {
 	// Start Debug Service
 	//
 	// /debug/pprof - Added to the default mux by importing the net/http/pprof package.
+	// /debug/vars - Added to the default mux by importing the expvar package.
 	//
 	// Not concerned with shutting this down when the application is shutdown.
 
