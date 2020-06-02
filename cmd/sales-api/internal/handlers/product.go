@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/rakshans1/service/internal/platform/auth"
 	"github.com/rakshans1/service/internal/platform/web"
 	"github.com/rakshans1/service/internal/product"
 )
@@ -34,12 +35,17 @@ func (p *Products) List(ctx context.Context, w http.ResponseWriter, r *http.Requ
 // Create decode the body of a request to create a new product. The full
 // product with generated fields is sent back in the response
 func (p *Products) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	claims, ok := ctx.Value(auth.Key).(auth.Claims)
+	if !ok {
+		return errors.New("claims missing from context")
+	}
+
 	var np product.NewProduct
 	if err := web.Decode(r, &np); err != nil {
 		return errors.Wrap(err, "decoding new product")
 	}
 
-	prod, err := product.Create(ctx, p.db, np, time.Now())
+	prod, err := product.Create(ctx, p.db, claims, np, time.Now())
 	if err != nil {
 		return errors.Wrap(err, "creating new product")
 	}
@@ -78,7 +84,12 @@ func (p *Products) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return errors.Wrap(err, "decoding product update")
 	}
 
-	if err := product.Update(ctx, p.db, id, update, time.Now()); err != nil {
+	claims, ok := ctx.Value(auth.Key).(auth.Claims)
+	if !ok {
+		return errors.New("claims missing from context")
+	}
+
+	if err := product.Update(ctx, p.db, claims, id, update, time.Now()); err != nil {
 		switch err {
 		case product.ErrNotFound:
 			return web.NewRequestError(err, http.StatusNotFound)

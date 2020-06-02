@@ -15,6 +15,13 @@ import (
 	"github.com/rakshans1/service/internal/schema"
 )
 
+// These are the IDs in the seed data for admin@example.com and
+// user@example.com.
+const (
+	AdminID = "5cf37266-3473-4006-984f-9325122678b7"
+	UserID  = "45b5fbd3-755f-4379-8f07-a58d4a30fa2f"
+)
+
 // NewUnit creates a test database inside a Docker container. It creates the
 // required table structure but the database is otherwise empty.
 //

@@ -12,6 +12,7 @@ type Product struct {
 	Quantity    int       `db:"quantity" json:"quantity"`
 	Sold        int       `db:"sold" json:"sold"`
 	Revenue     int       `db:"revenue" json:"revenue"`
+	UserID      string    `db:"user_id" json:"user_id"`
 	DateCreated time.Time `db:"date_created" json:"date_created"`
 	DateUpdated time.Time `db:"date_updated" json:"date_updated"`
 }

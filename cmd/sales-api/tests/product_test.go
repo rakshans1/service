@@ -23,7 +23,10 @@ func TestProducts(t *testing.T) {
 	test := tests.New(t)
 	defer test.Teardown()
 
-	tests := ProductTests{app: handlers.API(test.DB, test.Log, test.Authenticator)}
+	tests := ProductTests{
+		app:        handlers.API(test.DB, test.Log, test.Authenticator),
+		adminToken: test.Token("admin@example.com", "gophers"),
+	}
 
 	t.Run("List", tests.List)
 	t.Run("CreateRequiresFields", tests.CreateRequiresFields)
@@ -34,12 +37,15 @@ func TestProducts(t *testing.T) {
 // passing dependencies for tests while still providing a convenient syntax
 // when subtests are registered.
 type ProductTests struct {
-	app http.Handler
+	app        http.Handler
+	adminToken string
 }
 
 func (p *ProductTests) List(t *testing.T) {
 	req := httptest.NewRequest("GET", "/v1/products", nil)
 	resp := httptest.NewRecorder()
+
+	req.Header.Set("Authorization", "Bearer "+p.adminToken)
 
 	p.app.ServeHTTP(resp, req)
 
@@ -60,6 +66,7 @@ func (p *ProductTests) List(t *testing.T) {
 			"quantity":     float64(42),
 			"revenue":      float64(350),
 			"sold":         float64(7),
+			"user_id":      "00000000-0000-0000-0000-000000000000",
 			"date_created": "2019-01-01T00:00:01.000001Z",
 			"date_updated": "2019-01-01T00:00:01.000001Z",
 		},
@@ -70,6 +77,7 @@ func (p *ProductTests) List(t *testing.T) {
 			"quantity":     float64(120),
 			"revenue":      float64(225),
 			"sold":         float64(3),
+			"user_id":      "00000000-0000-0000-0000-000000000000",
 			"date_created": "2019-01-01T00:00:02.000001Z",
 			"date_updated": "2019-01-01T00:00:02.000001Z",
 		},
@@ -83,6 +91,8 @@ func (p *ProductTests) List(t *testing.T) {
 func (p *ProductTests) CreateRequiresFields(t *testing.T) {
 	body := strings.NewReader(`{}`)
 	req := httptest.NewRequest("POST", "/v1/products", body)
+
+	req.Header.Set("Authorization", "Bearer "+p.adminToken)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp := httptest.NewRecorder()
@@ -102,6 +112,7 @@ func (p *ProductTests) ProductCRUD(t *testing.T) {
 
 		req := httptest.NewRequest("POST", "/v1/products", body)
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+p.adminToken)
 		resp := httptest.NewRecorder()
 
 		p.app.ServeHTTP(resp, req)
@@ -133,6 +144,7 @@ func (p *ProductTests) ProductCRUD(t *testing.T) {
 			"quantity":     float64(6),
 			"sold":         float64(0),
 			"revenue":      float64(0),
+			"user_id":      tests.AdminID,
 		}
 
 		if diff := cmp.Diff(want, created); diff != "" {
@@ -144,6 +156,7 @@ func (p *ProductTests) ProductCRUD(t *testing.T) {
 		url := fmt.Sprintf("/v1/products/%s", created["id"])
 		req := httptest.NewRequest("GET", url, nil)
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+p.adminToken)
 		resp := httptest.NewRecorder()
 
 		p.app.ServeHTTP(resp, req)
@@ -168,6 +181,7 @@ func (p *ProductTests) ProductCRUD(t *testing.T) {
 		url := fmt.Sprintf("/v1/products/%s", created["id"])
 		req := httptest.NewRequest("PUT", url, body)
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+p.adminToken)
 		resp := httptest.NewRecorder()
 
 		p.app.ServeHTTP(resp, req)
@@ -179,6 +193,7 @@ func (p *ProductTests) ProductCRUD(t *testing.T) {
 		// Retrieve updated record to be sure it worked.
 		req = httptest.NewRequest("GET", url, nil)
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+p.adminToken)
 		resp = httptest.NewRecorder()
 
 		p.app.ServeHTTP(resp, req)
@@ -201,6 +216,7 @@ func (p *ProductTests) ProductCRUD(t *testing.T) {
 			"quantity":     float64(10),
 			"sold":         float64(0),
 			"revenue":      float64(0),
+			"user_id":      tests.AdminID,
 		}
 
 		// Updated product should match the one we created.
@@ -212,6 +228,7 @@ func (p *ProductTests) ProductCRUD(t *testing.T) {
 	{ // DELETE
 		url := fmt.Sprintf("/v1/products/%s", created["id"])
 		req := httptest.NewRequest("DELETE", url, nil)
+		req.Header.Set("Authorization", "Bearer "+p.adminToken)
 		resp := httptest.NewRecorder()
 
 		p.app.ServeHTTP(resp, req)
@@ -223,6 +240,7 @@ func (p *ProductTests) ProductCRUD(t *testing.T) {
 		// Retrieve updated record to be sure it worked.
 		req = httptest.NewRequest("GET", url, nil)
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+p.adminToken)
 		resp = httptest.NewRecorder()
 
 		p.app.ServeHTTP(resp, req)
