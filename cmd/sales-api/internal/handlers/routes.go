@@ -12,7 +12,7 @@ import (
 
 // API constructs an http.Handler will all apllication routes definde.
 func API(db *sqlx.DB, log *log.Logger, authenticator *auth.Authenticator) http.Handler {
-	app := web.NewApp(log, mid.Logger(log), mid.Errors(log), mid.Metrics())
+	app := web.NewApp(log, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
 
 	{
 		c := Check{db: db}
