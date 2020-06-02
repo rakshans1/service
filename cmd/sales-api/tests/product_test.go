@@ -3,16 +3,13 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/rakshans1/service/cmd/sales-api/internal/handlers"
-	"github.com/rakshans1/service/internal/schema"
 	"github.com/rakshans1/service/internal/tests"
 )
 
@@ -23,16 +20,10 @@ import (
 // subtest needs a fresh instance of the application it can make it or it
 // should be its own Test* function.
 func TestProducts(t *testing.T) {
-	db, teardown := tests.NewUnit(t)
-	defer teardown()
+	test := tests.New(t)
+	defer test.Teardown()
 
-	if err := schema.Seed(db); err != nil {
-		t.Fatal(err)
-	}
-
-	log := log.New(os.Stderr, "TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
-
-	tests := ProductTests{app: handlers.API(db, log)}
+	tests := ProductTests{app: handlers.API(test.DB, test.Log, test.Authenticator)}
 
 	t.Run("List", tests.List)
 	t.Run("CreateRequiresFields", tests.CreateRequiresFields)

@@ -6,16 +6,23 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/rakshans1/service/internal/mid"
+	"github.com/rakshans1/service/internal/platform/auth"
 	"github.com/rakshans1/service/internal/platform/web"
 )
 
 // API constructs an http.Handler will all apllication routes definde.
-func API(db *sqlx.DB, log *log.Logger) http.Handler {
+func API(db *sqlx.DB, log *log.Logger, authenticator *auth.Authenticator) http.Handler {
 	app := web.NewApp(log, mid.Logger(log), mid.Errors(log), mid.Metrics())
 
 	{
 		c := Check{db: db}
 		app.Handle(http.MethodGet, "/v1/health", c.Health)
+	}
+
+	{
+		// Register user handlers.
+		u := Users{db: db, authenticator: authenticator}
+		app.Handle(http.MethodGet, "/v1/users/token", u.Token)
 	}
 
 	{
