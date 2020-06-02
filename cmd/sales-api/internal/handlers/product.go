@@ -68,7 +68,7 @@ func (p *Products) Retrive(ctx context.Context, w http.ResponseWriter, r *http.R
 
 	id := chi.URLParam(r, "id")
 
-	prod, err := product.Retrieve(ctx, p.db, id)
+	prod, err := product.Get(ctx, p.db, id)
 	if err != nil {
 		switch err {
 		case product.ErrNotFound:

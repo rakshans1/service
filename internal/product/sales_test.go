@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rakshans1/service/internal/platform/auth"
 	"github.com/rakshans1/service/internal/product"
 	"github.com/rakshans1/service/internal/tests"
 )

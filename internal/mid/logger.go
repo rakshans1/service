@@ -2,7 +2,6 @@ package mid
 
 import (
 	"context"
-	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -25,7 +24,7 @@ func Logger(log *log.Logger) web.Middleware {
 
 			v, ok := ctx.Value(web.KeyValues).(*web.Values)
 			if !ok {
-				return errors.New("web value missing from context")
+				return web.NewShutdownError("web value missing from context")
 			}
 
 			err := before(ctx, w, r)

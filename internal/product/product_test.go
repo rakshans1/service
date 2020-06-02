@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/rakshans1/service/internal/platform/auth"
 	"github.com/rakshans1/service/internal/product"
 	"github.com/rakshans1/service/internal/schema"
 	"github.com/rakshans1/service/internal/tests"
@@ -34,7 +35,7 @@ func TestProducts(t *testing.T) {
 		t.Fatalf("creating product p0: %s", err)
 	}
 
-	p1, err := product.Retrieve(ctx, db, p0.ID)
+	p1, err := product.Get(ctx, db, p0.ID)
 	if err != nil {
 		t.Fatalf("getting product p0: %s", err)
 	}
@@ -53,7 +54,7 @@ func TestProducts(t *testing.T) {
 		t.Fatalf("creating product p0: %s", err)
 	}
 
-	saved, err := product.Retrieve(ctx, db, p0.ID)
+	saved, err := product.Get(ctx, db, p0.ID)
 	if err != nil {
 		t.Fatalf("getting product p0: %s", err)
 	}
@@ -73,7 +74,7 @@ func TestProducts(t *testing.T) {
 		t.Fatalf("deleting product: %v", err)
 	}
 
-	_, err = product.Retrieve(ctx, db, p0.ID)
+	_, err = product.Get(ctx, db, p0.ID)
 	if err == nil {
 		t.Fatalf("should not be able to retrieve deleted product")
 	}

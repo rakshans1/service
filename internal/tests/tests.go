@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"github.com/rakshans1/service/internal/platform/database"
 	"github.com/rakshans1/service/internal/platform/database/databasetest"
 	"github.com/rakshans1/service/internal/schema"
+	"github.com/rakshans1/service/internal/user"
 )
 
 // These are the IDs in the seed data for admin@example.com and

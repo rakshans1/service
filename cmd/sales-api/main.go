@@ -142,18 +142,23 @@ func run() error {
 	//
 	// Not concerned with shutting this down when the application is shutdown.
 
-	// =========================================================================
 	go func() {
 		log.Println("debug service listening on", cfg.Web.Debug)
 		err := http.ListenAndServe(cfg.Web.Debug, http.DefaultServeMux)
 		log.Println("debug service closed", err)
 	}()
 
+	// =========================================================================
 	// Start API Service
+
+	// Make a channel to listen for an interrupt or terminate signal from the OS.
+	// Use a buffered channel because the signal package requires it.
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	api := http.Server{
 		Addr:         cfg.Web.Address,
-		Handler:      handlers.API(db, log, authenticator),
+		Handler:      handlers.API(shutdown, db, log, authenticator),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 	}
@@ -167,11 +172,6 @@ func run() error {
 		log.Printf("main : API listening on %s", api.Addr)
 		serverErrors <- api.ListenAndServe()
 	}()
-
-	// Make a channel to listen for an interrupt or terminate signal from the OS.
-	// Use a buffered channel because the signal package requires it.
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	// =========================================================================
 	// Shutdown

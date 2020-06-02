@@ -77,29 +77,31 @@ func Create(ctx context.Context, db *sqlx.DB, user auth.Claims, np NewProduct, n
 	return &p, nil
 }
 
-// Retrieve finds the product identified by a given ID.
-func Retrieve(ctx context.Context, db *sqlx.DB, id string) (*Product, error) {
-	ctx, span := trace.StartSpan(ctx, "internal.product.Retrieve")
+// Get finds the product identified by a given ID.
+func Get(ctx context.Context, db *sqlx.DB, id string) (*Product, error) {
+	ctx, span := trace.StartSpan(ctx, "product.Get")
 	defer span.End()
+
 	if _, err := uuid.Parse(id); err != nil {
 		return nil, ErrInvalidID
 	}
 
 	var p Product
 
-	const q = `SELECT 
-					p.*,
-					COALESCE(SUM(s.quantity),0) AS sold,
-					COALESCE(SUM(s.paid),0) AS revenue
-					FROM products AS p
-					LEFT JOIN sales AS s ON p.product_id = s.product_id
-					WHERE p.product_id = $1
-					GROUP BY p.product_id`
+	const q = `SELECT
+			p.*,
+			COALESCE(SUM(s.quantity), 0) AS sold,
+			COALESCE(SUM(s.paid), 0) AS revenue
+		FROM products AS p
+		LEFT JOIN sales AS s ON p.product_id = s.product_id
+		WHERE p.product_id = $1
+		GROUP BY p.product_id`
 
 	if err := db.GetContext(ctx, &p, q, id); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrNotFound
 		}
+
 		return nil, errors.Wrap(err, "selecting single product")
 	}
 
@@ -112,7 +114,7 @@ func Update(ctx context.Context, db *sqlx.DB, user auth.Claims, id string, updat
 	ctx, span := trace.StartSpan(ctx, "internal.product.Update")
 	defer span.End()
 
-	p, err := Retrieve(ctx, db, id)
+	p, err := Get(ctx, db, id)
 	if err != nil {
 		return err
 	}
