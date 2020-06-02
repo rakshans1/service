@@ -1,7 +1,7 @@
 version: '3'
 
 networks:
-  postgres:
+  service:
     driver: bridge
 
 services:
@@ -10,9 +10,18 @@ services:
   db:
     container_name: sales_db
     networks:
-      - postgres
+      - service
     image: postgres
     ports:
       - 5432:5432
     environment:
       POSTGRES_PASSWORD: postgres
+
+ # This sidecar allows for the viewing of traces.
+  zipkin:
+    container_name: zipkin
+    networks:
+      - service
+    image: openzipkin/zipkin
+    ports:
+      - 9411:9411

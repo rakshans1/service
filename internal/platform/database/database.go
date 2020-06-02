@@ -6,6 +6,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // The database driver in use.
+	"go.opencensus.io/trace"
 )
 
 // Config is the required properties to use the database.
@@ -44,6 +45,8 @@ func Open(cfg Config) (*sqlx.DB, error) {
 // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
 func StatusCheck(ctx context.Context, db *sqlx.DB) error {
+	ctx, span := trace.StartSpan(ctx, "platform.DB.StatusCheck")
+	defer span.End()
 
 	// Run a simple query to determine connectivity. The db has a "Ping" method
 	// but it can false-positive when it was previously able to talk to the
