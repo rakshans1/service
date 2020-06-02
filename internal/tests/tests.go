@@ -127,6 +127,26 @@ func (test *Test) Teardown() {
 	test.cleanup()
 }
 
+// Token generates an authenticated token for a user.
+func (test *Test) Token(email, pass string) string {
+	test.t.Helper()
+
+	claims, err := user.Authenticate(
+		context.Background(), test.DB, time.Now(),
+		email, pass,
+	)
+	if err != nil {
+		test.t.Fatal(err)
+	}
+
+	tkn, err := test.Authenticator.GenerateToken(claims)
+	if err != nil {
+		test.t.Fatal(err)
+	}
+
+	return tkn
+}
+
 // StringPointer is a helper to get a *string from a string. It is in the tests
 // package because we normally don't want to deal with pointers to basic types
 // but it's useful in some tests.

@@ -41,7 +41,10 @@ func NewApp(log *log.Logger, mw ...Middleware) *App {
 }
 
 // Handle associates a handler function with an HTTP Method  and URL pattern.
-func (a *App) Handle(method, url string, h Handler) {
+func (a *App) Handle(method, url string, h Handler, mw ...Middleware) {
+
+	// First wrap handler specific middleware around this handler.
+	h = wrapMiddleware(mw, h)
 
 	// wrap the application's middleware around this endpoint's handler.
 	h = wrapMiddleware(a.mw, h)
