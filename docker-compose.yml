@@ -18,10 +18,11 @@ services:
       POSTGRES_PASSWORD: postgres
 
  # This sidecar allows for the viewing of traces.
-  zipkin:
-    container_name: zipkin
+  jaeger:
+    container_name: jaeger
     networks:
       - service
-    image: openzipkin/zipkin
+    image: jaegertracing/all-in-one
     ports:
-      - 9411:9411
+      - 14268:14268
+      - 16686:16686

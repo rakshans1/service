@@ -23,6 +23,7 @@ import (
 	"github.com/rakshans1/service/cmd/sales-api/internal/handlers"
 	"github.com/rakshans1/service/internal/platform/auth"
 	"github.com/rakshans1/service/internal/platform/database"
+	"github.com/rakshans1/service/internal/platform/tracer"
 	"go.opencensus.io/trace"
 )
 
@@ -63,8 +64,8 @@ func run() error {
 			Algorithm      string `conf:"default:RS256"`
 		}
 		Trace struct {
-			URL         string  `conf:"default:http://localhost:9411/api/v2/spans"`
-			Service     string  `conf:"default:sales-api"`
+			ReporterURI string  `conf:"default:http://localhost:14268/api/traces"`
+			ServiceName string  `conf:"default:sales-api"`
 			Probability float64 `conf:"default:1"`
 		}
 	}
@@ -123,16 +124,12 @@ func run() error {
 	// =========================================================================
 	// Start Tracing Support
 
-	closer, err := registerTracer(
-		cfg.Trace.Service,
-		cfg.Web.Address,
-		cfg.Trace.URL,
-		cfg.Trace.Probability,
-	)
-	if err != nil {
-		return err
-	}
-	defer closer()
+    flush, err := tracer.Init(cfg.Trace.ServiceName, cfg.Trace.ReporterURI, cfg.Trace.Probability, log); 
+    if err != nil {
+      return errors.Wrap(err, "starting tracer")
+
+    }
+    defer flush();
 
 	// =========================================================================
 	// Start Debug Service

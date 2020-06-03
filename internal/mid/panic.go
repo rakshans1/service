@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rakshans1/service/internal/platform/web"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 )
 
 // Panics recovers from panics and converts the panic to an error so it is
@@ -19,7 +19,7 @@ func Panics(log *log.Logger) web.Middleware {
 	f := func(after web.Handler) web.Handler {
 
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (err error) {
-			ctx, span := trace.StartSpan(ctx, "internal.mid.Panics")
+			ctx, span := global.Tracer("service").Start(ctx, "internal.mid.panics")
 			defer span.End()
 
 			// If the context is missing this value, request the service

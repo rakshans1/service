@@ -9,7 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/rakshans1/service/internal/platform/auth"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -21,7 +21,7 @@ var (
 
 // Create inserts a new user into the database.
 func Create(ctx context.Context, db *sqlx.DB, n NewUser, now time.Time) (*User, error) {
-	ctx, span := trace.StartSpan(ctx, "internal.user.Create")
+	ctx, span := global.Tracer("service").Start(ctx, "internal.user.create")
 	defer span.End()
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(n.Password), bcrypt.DefaultCost)
@@ -59,7 +59,7 @@ func Create(ctx context.Context, db *sqlx.DB, n NewUser, now time.Time) (*User, 
 // success it returns a Claims value representing this user. The claims can be
 // used to generate a token for future authentication.
 func Authenticate(ctx context.Context, db *sqlx.DB, now time.Time, email, password string) (auth.Claims, error) {
-	ctx, span := trace.StartSpan(ctx, "user.Authenticate")
+	ctx, span := global.Tracer("service").Start(ctx, "user.authenticate")
 	defer span.End()
 
 	const q = `SELECT * FROM users WHERE email = $1`

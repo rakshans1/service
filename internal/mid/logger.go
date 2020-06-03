@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/rakshans1/service/internal/platform/web"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 )
 
 // Logger writes some information about the request to the logs in the
@@ -19,7 +19,7 @@ func Logger(log *log.Logger) web.Middleware {
 
 		// Create the handler that will be attached in the middleware chain.
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			ctx, span := trace.StartSpan(ctx, "internal.mid.RequestLogger")
+			ctx, span := global.Tracer("service").Start(ctx, "internal.mid.requestlogger")
 			defer span.End()
 
 			v, ok := ctx.Value(web.KeyValues).(*web.Values)

@@ -7,7 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/rakshans1/service/internal/platform/database"
 	"github.com/rakshans1/service/internal/platform/web"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 )
 
 // Check provides support for orchestration health checks.
@@ -17,7 +17,7 @@ type Check struct {
 
 // Health validates the service is healthy and ready to accept requests.
 func (c *Check) Health(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Check.Health")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.check.health")
 	defer span.End()
 
 	var health struct {

@@ -12,7 +12,7 @@ import (
 	"github.com/rakshans1/service/internal/platform/auth"
 	"github.com/rakshans1/service/internal/platform/web"
 	"github.com/rakshans1/service/internal/product"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 )
 
 // Products defines all of the handlers related to products. It holds the
@@ -25,7 +25,7 @@ type Products struct {
 // List gets all products from the service layer and encodes them for the
 // client response.
 func (p *Products) List(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Product.List")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.product.list")
 	defer span.End()
 
 	list, err := product.List(ctx, p.db)
@@ -39,7 +39,7 @@ func (p *Products) List(ctx context.Context, w http.ResponseWriter, r *http.Requ
 // Create decode the body of a request to create a new product. The full
 // product with generated fields is sent back in the response
 func (p *Products) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Products.Create")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.products.create")
 	defer span.End()
 
 	claims, ok := ctx.Value(auth.Key).(auth.Claims)
@@ -63,7 +63,7 @@ func (p *Products) Create(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // Retrive finds a single product identified by an ID in the request URL.
 func (p *Products) Retrive(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Products.Get")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.products.get")
 	defer span.End()
 
 	id := chi.URLParam(r, "id")
@@ -88,7 +88,7 @@ func (p *Products) Retrive(ctx context.Context, w http.ResponseWriter, r *http.R
 // Update decodes the body of a request to update an existing product. The ID
 // of the product is part of the request URL.
 func (p *Products) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Products.Update")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.products.update")
 	defer span.End()
 
 	id := chi.URLParam(r, "id")
@@ -119,7 +119,7 @@ func (p *Products) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 // Delete removes a single product identified by an ID in the request URL.
 func (p *Products) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Products.Delete")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.products.delete")
 	defer span.End()
 
 	id := chi.URLParam(r, "id")
@@ -139,7 +139,7 @@ func (p *Products) Delete(ctx context.Context, w http.ResponseWriter, r *http.Re
 // AddSale creates a new Sale for a particular product. It looks for a JSON
 // object in the request body. The full model is returned to the caller.
 func (p *Products) AddSale(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Products.AddSale")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.products.addsale")
 	defer span.End()
 
 	var ns product.NewSale
@@ -159,7 +159,7 @@ func (p *Products) AddSale(ctx context.Context, w http.ResponseWriter, r *http.R
 
 // ListSales gets all sales for a particular product.
 func (p *Products) ListSales(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Products.ListSales")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.products.listsales")
 	defer span.End()
 
 	id := chi.URLParam(r, "id")

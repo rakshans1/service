@@ -9,7 +9,7 @@ import (
 	"github.com/rakshans1/service/internal/platform/auth"
 	"github.com/rakshans1/service/internal/platform/web"
 	"github.com/rakshans1/service/internal/user"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 )
 
 // Users holds handlers for dealing with user.
@@ -22,7 +22,7 @@ type Users struct {
 // an email and password for the request using HTTP Basic Auth. The user will
 // be identified by email and authenticated by their password.
 func (u *Users) Token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.StartSpan(ctx, "handlers.Users.Token")
+	ctx, span := global.Tracer("service").Start(ctx, "handlers.users.token")
 	defer span.End()
 
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)

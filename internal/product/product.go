@@ -9,7 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/rakshans1/service/internal/platform/auth"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 )
 
 // Predefined errors identify expected failure conditions.
@@ -27,7 +27,7 @@ var (
 
 // List gets all Products from the database.
 func List(ctx context.Context, db *sqlx.DB) ([]Product, error) {
-	ctx, span := trace.StartSpan(ctx, "internal.product.List")
+	ctx, span := global.Tracer("service").Start(ctx, "internal.product.list")
 	defer span.End()
 
 	products := []Product{}
@@ -52,7 +52,7 @@ func List(ctx context.Context, db *sqlx.DB) ([]Product, error) {
 // fields like ID and DateCreated populated.
 func Create(ctx context.Context, db *sqlx.DB, user auth.Claims, np NewProduct, now time.Time) (*Product, error) {
 
-	ctx, span := trace.StartSpan(ctx, "internal.product.Create")
+	ctx, span := global.Tracer("service").Start(ctx, "internal.product.create")
 	defer span.End()
 
 	p := Product{
@@ -79,7 +79,7 @@ func Create(ctx context.Context, db *sqlx.DB, user auth.Claims, np NewProduct, n
 
 // Get finds the product identified by a given ID.
 func Get(ctx context.Context, db *sqlx.DB, id string) (*Product, error) {
-	ctx, span := trace.StartSpan(ctx, "product.Get")
+	ctx, span := global.Tracer("service").Start(ctx, "product.get")
 	defer span.End()
 
 	if _, err := uuid.Parse(id); err != nil {
@@ -111,7 +111,7 @@ func Get(ctx context.Context, db *sqlx.DB, id string) (*Product, error) {
 // Update modifies data about a Product. It will error if the specified ID is
 // invalid or does not reference an existing Product.
 func Update(ctx context.Context, db *sqlx.DB, user auth.Claims, id string, update UpdateProduct, now time.Time) error {
-	ctx, span := trace.StartSpan(ctx, "internal.product.Update")
+	ctx, span := global.Tracer("service").Start(ctx, "internal.product.update")
 	defer span.End()
 
 	p, err := Get(ctx, db, id)
@@ -156,7 +156,7 @@ func Update(ctx context.Context, db *sqlx.DB, user auth.Claims, id string, updat
 
 // Delete removes the product identified by a given ID.
 func Delete(ctx context.Context, db *sqlx.DB, id string) error {
-	ctx, span := trace.StartSpan(ctx, "internal.product.Delete")
+	ctx, span := global.Tracer("service").Start(ctx, "internal.product.delete")
 	defer span.End()
 	if _, err := uuid.Parse(id); err != nil {
 		return ErrInvalidID

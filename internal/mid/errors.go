@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/rakshans1/service/internal/platform/web"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/global"
 )
 
 // Errors handles errors coming out of the call chain. It detects normal
@@ -18,7 +18,7 @@ func Errors(log *log.Logger) web.Middleware {
 	f := func(before web.Handler) web.Handler {
 
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			ctx, span := trace.StartSpan(ctx, "internal.mid.Errors")
+			ctx, span := global.Tracer("service").Start(ctx, "internal.mid.errors")
 			defer span.End()
 
 			v, ok := ctx.Value(web.KeyValues).(*web.Values)
