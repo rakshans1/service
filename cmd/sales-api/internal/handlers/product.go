@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/rakshans1/service/internal/platform/auth"
@@ -66,7 +65,7 @@ func (p *Products) Retrive(ctx context.Context, w http.ResponseWriter, r *http.R
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.products.get")
 	defer span.End()
 
-	id := chi.URLParam(r, "id")
+	id := web.Param(r, "id")
 
 	prod, err := product.Get(ctx, p.db, id)
 	if err != nil {
@@ -91,7 +90,7 @@ func (p *Products) Update(ctx context.Context, w http.ResponseWriter, r *http.Re
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.products.update")
 	defer span.End()
 
-	id := chi.URLParam(r, "id")
+	id := web.Param(r, "id")
 
 	var update product.UpdateProduct
 	if err := web.Decode(r, &update); err != nil {
@@ -122,7 +121,7 @@ func (p *Products) Delete(ctx context.Context, w http.ResponseWriter, r *http.Re
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.products.delete")
 	defer span.End()
 
-	id := chi.URLParam(r, "id")
+	id := web.Param(r, "id")
 
 	if err := product.Delete(r.Context(), p.db, id); err != nil {
 		switch err {
@@ -147,7 +146,7 @@ func (p *Products) AddSale(ctx context.Context, w http.ResponseWriter, r *http.R
 		return errors.Wrap(err, "decoding new sale")
 	}
 
-	productID := chi.URLParam(r, "id")
+	productID := web.Param(r, "id")
 
 	sale, err := product.AddSale(ctx, p.db, ns, productID, time.Now())
 	if err != nil {
@@ -162,7 +161,7 @@ func (p *Products) ListSales(ctx context.Context, w http.ResponseWriter, r *http
 	ctx, span := global.Tracer("service").Start(ctx, "handlers.products.listsales")
 	defer span.End()
 
-	id := chi.URLParam(r, "id")
+	id := web.Param(r, "id")
 
 	list, err := product.ListSales(ctx, p.db, id)
 	if err != nil {

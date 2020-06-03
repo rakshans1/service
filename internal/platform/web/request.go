@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/go-chi/chi"
 	en "github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	validator "github.com/go-playground/validator/v10"
@@ -39,6 +40,11 @@ func init() {
 		}
 		return name
 	})
+}
+
+// Params returns the web call parameters from the request.
+func Param(r *http.Request, key string) string {
+	return chi.URLParam(r, key)
 }
 
 // Decode reads the body of an HTTP request looking for a JSON document. The
