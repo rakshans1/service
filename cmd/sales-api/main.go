@@ -46,7 +46,7 @@ func run() error {
 	var cfg struct {
 		Web struct {
 			Address         string        `conf:"default:localhost:8000"`
-			Debug           string        `conf:"default:localhost:6060"`
+			DebugHost           string        `conf:"default:localhost:6060"`
 			ReadTimeout     time.Duration `conf:"default:5s"`
 			WriteTimeout    time.Duration `conf:"default:5s"`
 			ShutdownTimeout time.Duration `conf:"default:5s"`
@@ -140,9 +140,10 @@ func run() error {
 	// Not concerned with shutting this down when the application is shutdown.
 
 	go func() {
-		log.Println("debug service listening on", cfg.Web.Debug)
-		err := http.ListenAndServe(cfg.Web.Debug, http.DefaultServeMux)
-		log.Println("debug service closed", err)
+		log.Println("debug service listening on", cfg.Web.DebugHost)
+        if err := http.ListenAndServe(cfg.Web.DebugHost, http.DefaultServeMux); err != nil {
+			log.Printf("main: Debug Listener closed : %v", err)
+		}
 	}()
 
 	// =========================================================================
