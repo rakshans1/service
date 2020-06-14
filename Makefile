@@ -44,11 +44,20 @@ compile:
 	@-$(MAKE) -s go-compile 2> $(STDERR)
 	@cat $(STDERR) | sed -e '1s/.*/\nError:\n/'  | sed 's/make\[.*/ /' | sed "/^/s/^/     /" 1>&2
 
+## lint: Static check.
+lint: go-lint
+
 go-compile: go-build
 
 go-build:
 	@echo "  >  Building binary..."
 	@GOBIN=$(GOBIN) go build -o $(GOBIN)/$(PROJECTNAME) $(GOFILES)
+
+.PHONY: go-lint
+go-lint:
+	@GOBIN=$(GOBIN) go build -o $(GOBIN)/$(PROJECTNAME) $(GOFILES)
+	@command -v staticcheck > /dev/null 2>&1 || go get honnef.co/go/tools/cmd/staticcheck
+	@staticcheck -checks="all" ./...
 
 .PHONY: help
 all: help
