@@ -17,7 +17,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rakshans1/service/internal/platform/auth"
 	"github.com/rakshans1/service/internal/platform/database"
-	"github.com/rakshans1/service/internal/schema"
 	"github.com/rakshans1/service/internal/user"
 )
 
@@ -35,11 +34,11 @@ func run() error {
 
 	var cfg struct {
 		DB struct {
-			User       string `conf:"default:postgres"`
-			Password   string `conf:"default:postgres,noprint"`
+			User       string `conf:"default:sales"`
+			Password   string `conf:"default:rng93Ny2Bb8v,noprint"`
 			Host       string `conf:"default:localhost"`
-			Name       string `conf:"default:postgres"`
-			DisableTLS bool   `conf:"default:true"`
+			Name       string `conf:"default:sale-db"`
+			DisableTLS bool   `conf:"default:false"`
 		}
 		Args conf.Args
 	}
@@ -67,10 +66,6 @@ func run() error {
 
 	var err error
 	switch cfg.Args.Num(0) {
-	case "migrate":
-		err = migrate(dbConfig)
-	case "seed":
-		err = seed(dbConfig)
 	case "useradd":
 		err = useradd(dbConfig, cfg.Args.Num(1), cfg.Args.Num(2))
 	case "keygen":
@@ -83,36 +78,6 @@ func run() error {
 		return err
 	}
 
-	return nil
-}
-
-func migrate(cfg database.Config) error {
-	db, err := database.Open(cfg)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	if err := schema.Migrate(db); err != nil {
-		return err
-	}
-
-	fmt.Println("Migrations complete")
-	return nil
-}
-
-func seed(cfg database.Config) error {
-	db, err := database.Open(cfg)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	if err := schema.Seed(db); err != nil {
-		return err
-	}
-
-	fmt.Println("Seed data complete")
 	return nil
 }
 

@@ -13,7 +13,6 @@ import (
 	"github.com/rakshans1/service/internal/platform/auth"
 	"github.com/rakshans1/service/internal/platform/database"
 	"github.com/rakshans1/service/internal/platform/database/databasetest"
-	"github.com/rakshans1/service/internal/schema"
 	"github.com/rakshans1/service/internal/user"
 )
 
@@ -68,11 +67,6 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 		t.Fatalf("waiting for database to be ready: %v", pingError)
 	}
 
-	if err := schema.Migrate(db); err != nil {
-		databasetest.StopContainer(t, c)
-		t.Fatalf("migrating: %s", err)
-	}
-
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.
 	teardown := func() {
@@ -100,10 +94,6 @@ func New(t *testing.T) *Test {
 
 	// Initialize and seed database. Store the cleanup function call later.
 	db, cleanup := NewUnit(t)
-
-	if err := schema.Seed(db); err != nil {
-		t.Fatal(err)
-	}
 
 	// Create the logger to use.
 	logger := log.New(os.Stdout, "TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)

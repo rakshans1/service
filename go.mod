@@ -3,10 +3,7 @@ module github.com/rakshans1/service
 go 1.12
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.4.1 // indirect
-	github.com/GuiaBolso/darwin v0.0.0-20191218124601-fd6d2aa3d244
 	github.com/ardanlabs/conf v1.3.2
-	github.com/cznic/ql v1.2.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi v4.1.1+incompatible
 	github.com/go-playground/locales v0.13.0
