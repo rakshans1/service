@@ -3,7 +3,7 @@ PROJECTNAME=$(shell basename "$(PWD)")
 # Go related variables.
 GOBASE=$(shell pwd)
 GOBIN=$(GOBASE)/bin
-GOFILES=$(wildcard *.go)
+GOFILES="./cmd/sales-api"
 
 # Redirect error output to a file, so we can show it in development mode.
 STDERR=/tmp/.$(PROJECTNAME)-stderr.txt
@@ -41,7 +41,7 @@ restart-server: stop-server start-server
 compile:
 	@-touch $(STDERR)
 	@-rm $(STDERR)
-	@-$(MAKE) -s go-compile GOFILES='./cmd/sales-api' 2> $(STDERR)
+	@-$(MAKE) -s go-compile 2> $(STDERR)
 	@cat $(STDERR) | sed -e '1s/.*/\nError:\n/'  | sed 's/make\[.*/ /' | sed "/^/s/^/     /" 1>&2
 
 go-compile: go-build
