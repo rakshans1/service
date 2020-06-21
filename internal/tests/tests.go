@@ -11,7 +11,6 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/rakshans1/service/internal/platform/auth"
-	"github.com/rakshans1/service/internal/platform/database"
 	"github.com/rakshans1/service/internal/platform/database/databasetest"
 	"github.com/rakshans1/service/internal/user"
 )
@@ -34,45 +33,14 @@ const (
 func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 	t.Helper()
 
-	c := databasetest.StartContainer(t)
-
-	db, err := database.Open(database.Config{
-		User:       "postgres",
-		Password:   "postgres",
-		Host:       c.Host,
-		Name:       "postgres",
-		DisableTLS: true,
-	})
-	if err != nil {
-		t.Fatalf("opening database connection: %v", err)
-	}
-
-	t.Log("waiting for database to be ready")
-
-	// Wait for the database to be ready. Wait 100ms longer between each attempt.
-	// Do not try more than 20 times.
-	var pingError error
-	maxAttempts := 20
-	for attempts := 1; attempts <= maxAttempts; attempts++ {
-		pingError = db.Ping()
-		if pingError == nil {
-			break
-		}
-		time.Sleep(time.Duration(attempts) * 100 * time.Millisecond)
-	}
-
-	if pingError != nil {
-		databasetest.DumpContainerLogs(t, c)
-		databasetest.StopContainer(t, c)
-		t.Fatalf("waiting for database to be ready: %v", pingError)
-	}
+	db, cleanup := databasetest.NewTestDatabase(t)
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.
 	teardown := func() {
 		t.Helper()
 		db.Close()
-		databasetest.StopContainer(t, c)
+		cleanup()
 	}
 
 	return db, teardown
