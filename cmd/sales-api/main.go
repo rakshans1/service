@@ -48,11 +48,11 @@ func run() error {
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
 		DB struct {
-			User       string `conf:"default:postgres"`
-			Password   string `conf:"default:postgres,noprint"`
+			User       string `conf:"default:sales"`
+			Password   string `conf:"default:rng93Ny2Bb8v,noprint"`
 			Host       string `conf:"default:localhost"`
-			Name       string `conf:"default:postgres"`
-			DisableTLS bool   `conf:"default:true"`
+			Name       string `conf:"default:sales-db"`
+			DisableTLS bool   `conf:"default:false"`
 		}
 		Auth struct {
 			KeyID          string `conf:"default:1"`
